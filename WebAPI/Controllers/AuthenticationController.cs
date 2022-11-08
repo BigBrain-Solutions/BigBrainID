@@ -18,14 +18,7 @@ public class AuthenticationController : ControllerBase
 
     public AuthenticationController()
     {
-        var options = new SSLOptions(SslProtocols.Tls12, true, (sender, certificate, chain, errors) => true);
-        options.SetHostNameResolver((ipAddress) => "");
-        _cluster = Cluster.Builder()
-            .WithCredentials("", "")
-            .WithPort(10350)
-            .AddContactPoint("")
-            .WithSSL(options)
-            .Build();
+        _cluster = CassandraConnectionHelper.Connect("", "", "", 10350);
 
         _session = _cluster.Connect();
 
