@@ -10,6 +10,9 @@ services:
   
   api:
     container_name: BigBrainID_API
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5244
     build:
       context: .
       dockerfile: Dockerfile
