@@ -11,7 +11,7 @@ public static class CredentialsHelper
         var rnd = Random.Shared.Next();
 
         var str = guid.ToString() + now + rnd;
-        str = Convert.ToBase64String(new byte[8]);
+        str = Convert.ToBase64String(new byte[64]);
 
         return str;
     }
@@ -23,5 +23,10 @@ public static class CredentialsHelper
         cryptoRandomDataGenerator.GetBytes(buffer);
         var uniq = Convert.ToBase64String(buffer);
         return uniq;
+    }
+
+    public static int GenerateCode()
+    {
+        return Random.Shared.Next(10000, 1000000);
     }
 }

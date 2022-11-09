@@ -1,5 +1,4 @@
-﻿using System.Security.Authentication;
-using Application.Helpers;
+﻿using Application.Helpers;
 using Cassandra;
 using Cassandra.Mapping;
 using Domain.Dtos;
@@ -18,7 +17,7 @@ public class AuthenticationController : ControllerBase
 
     public AuthenticationController()
     {
-        _cluster = CassandraConnectionHelper.Connect("", "", "", 10350);
+        _cluster = CassandraConnectionHelper.Connect();
 
         _session = _cluster.Connect();
 

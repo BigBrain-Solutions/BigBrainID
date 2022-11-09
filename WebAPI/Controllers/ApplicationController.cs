@@ -17,7 +17,7 @@ public class ApplicationController : ControllerBase
 
     public ApplicationController()
     {
-        _cluster = CassandraConnectionHelper.Connect("", "", "", 10350);
+        _cluster = CassandraConnectionHelper.Connect();
         
         _session = _cluster.Connect();
 
@@ -36,6 +36,6 @@ public class ApplicationController : ControllerBase
         await _session.ExecuteAsync(new SimpleStatement(app));
         await _session.ExecuteAsync(new SimpleStatement(userSql));
 
-        return Ok();
+        return Created("",new{ Message = "Application was created"});
     }
 }
