@@ -37,7 +37,8 @@ public class AuthorizeController : ControllerBase
 
         var code = CredentialsHelper.GenerateCode().ToString();
 
-        await _session.ExecuteAsync(new SimpleStatement($"INSERT INTO BBS_ID.codes (id, code, email, scopes) VALUES ({Guid.NewGuid()},'{code}', '{email}', '{scope}')"));
+        var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.users WHERE email = '{email}' ALLOW FILTERING");
+        await _session.ExecuteAsync(new SimpleStatement($"INSERT INTO BBS_ID.codes (id, code, email, scopes) VALUES ({userId},'{code}', '{email}', '{scope}')"));
         
         redirectUri += $"?code={code}";
         
@@ -53,14 +54,14 @@ public class AuthorizeController : ControllerBase
         // Generate Access Token and save it to database
         var accessToken = AuthenticationHelper.GenerateAccessToken(AuthenticationHelper.AssembleClaimsIdentity(request.Code));
         
-        var userEmail = _mapper.First<string>($"SELECT email FROM BBS_ID.codes WHERE code = '{request.Code}' ALLOW FILTERING");
+        var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.codes WHERE code = '{request.Code}' ALLOW FILTERING");
 
-        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE email = '{userEmail}'"));
+        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
         
         // Generate Refresh Token
         var refreshToken = AuthenticationHelper.GenerateAccessToken(AuthenticationHelper.AssembleClaimsIdentity(Random.Shared.Next().ToString()));
 
-        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE email = '{userEmail}'"));
+        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
         
         // TODO: Check for client id or client secret
 
