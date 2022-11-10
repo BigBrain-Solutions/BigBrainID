@@ -1,6 +1,10 @@
 using System.Security.Authentication;
+using System.Text;
 using Application.Helpers;
 using Cassandra;
+using Domain.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +28,19 @@ await session.ExecuteAsync(new SimpleStatement("CREATE TABLE IF NOT EXISTS BBS_I
 await session.ExecuteAsync(new SimpleStatement($"CREATE TABLE IF NOT EXISTS {keyspace}.applications (id uuid PRIMARY KEY, title text, client_id text, client_secret text, redirect_uris set<text>, owner_id uuid), owner_id uuid"));
 await session.ExecuteAsync(new SimpleStatement($"CREATE TABLE IF NOT EXISTS {keyspace}.codes (id uuid PRIMARY KEY, code text, email text, scopes text)"));
 
+var settings = new Settings();
+builder.Configuration.Bind("Settings", settings);
+builder.Services.AddSingleton(settings);
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => 
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(settings.BearerKey)),
+        ValidateIssuerSigningKey = true,
+        ValidateAudience = false,
+        ValidateIssuer = false
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,6 +52,7 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

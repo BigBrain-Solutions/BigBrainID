@@ -1,7 +1,9 @@
-﻿using Application.Helpers;
+﻿using System.Text.RegularExpressions;
+using Application.Helpers;
 using Cassandra;
 using Cassandra.Mapping;
 using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
@@ -22,11 +24,17 @@ public class UserController : ControllerBase
 
         _mapper = new Mapper(_session);
     }
-    
-    [HttpPatch]
-    public async Task<IActionResult> Update(User user)
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult Me([FromHeader] string Authorization)
     {
-        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token = '{user.AccessToken}' WHERE id = {user.Id}"));
-        return Ok();
+        var bearer = new Regex("Bearer ");
+
+        var accessToken = bearer.Split(Authorization);
+
+        var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE access_token = '{accessToken[1]}' ALLOW FILTERING");
+        
+        return Ok(user);
     }
 }

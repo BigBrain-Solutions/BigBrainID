@@ -35,11 +35,11 @@ public static class AuthenticationHelper
         user.PasswordHash = GenerateHash(user.PasswordHash, user.Salt);
     }
     
-    public static string GenerateAccessToken(ClaimsIdentity subject)
+    public static string GenerateAccessToken(Settings settings, ClaimsIdentity subject)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes("qwertyuiopASDFGHJKL1234567890");
-        var tokenDescriptor = new SecurityTokenDescriptor()
+        var key = Encoding.ASCII.GetBytes(settings.BearerKey);
+        var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = subject,
             Expires = DateTime.Now.AddMinutes(60),
@@ -50,11 +50,11 @@ public static class AuthenticationHelper
         return tokenHandler.WriteToken(token);
     }
 
-    public static ClaimsIdentity AssembleClaimsIdentity(string code)
+    public static ClaimsIdentity AssembleClaimsIdentity(Guid userId)
     {
         var subject = new ClaimsIdentity(new[]
         {
-            new Claim("code", code),
+            new Claim("code", userId.ToString())
         });
         return subject;
     }
