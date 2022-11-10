@@ -50,14 +50,20 @@ public class AuthorizeController : ControllerBase
         // TODO: Check if Code is valid and get the scopes
         // TODO: Check Grant Type
         
-        // TODO: Generate Access Token and save it to database
-        // TODO: Generate Refresh Token
+        // Generate Access Token and save it to database
+        var accessToken = AuthenticationHelper.GenerateAccessToken(AuthenticationHelper.AssembleClaimsIdentity(request.Code));
+        
+        var userEmail = _mapper.First<string>($"SELECT email FROM BBS_ID.codes WHERE code = '{request.Code}' ALLOW FILTERING");
+
+        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE email = '{userEmail}'"));
+        
+        // Generate Refresh Token
+        var refreshToken = AuthenticationHelper.GenerateAccessToken(AuthenticationHelper.AssembleClaimsIdentity(Random.Shared.Next().ToString()));
+
+        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE email = '{userEmail}'"));
         
         // TODO: Check for client id or client secret
 
-        var accessToken = "test";
-        var refreshToken = "test";
-        
         return Ok(new
         {
             AccessToken = accessToken,

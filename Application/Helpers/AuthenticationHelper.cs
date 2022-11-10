@@ -1,5 +1,9 @@
-﻿using System.Security.Cryptography;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Domain.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Helpers;
 
@@ -29,5 +33,29 @@ public static class AuthenticationHelper
         var salt = GenerateSalt(24);
         user.Salt = Convert.ToBase64String(salt);
         user.PasswordHash = GenerateHash(user.PasswordHash, user.Salt);
+    }
+    
+    public static string GenerateAccessToken(ClaimsIdentity subject)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes("qwertyuiopASDFGHJKL1234567890");
+        var tokenDescriptor = new SecurityTokenDescriptor()
+        {
+            Subject = subject,
+            Expires = DateTime.Now.AddMinutes(60),
+            SigningCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+
+    public static ClaimsIdentity AssembleClaimsIdentity(string code)
+    {
+        var subject = new ClaimsIdentity(new[]
+        {
+            new Claim("code", code),
+        });
+        return subject;
     }
 }

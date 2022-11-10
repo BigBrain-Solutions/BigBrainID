@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class AuthenticationController : ControllerBase
 {
     private readonly ICluster _cluster;
@@ -24,12 +24,6 @@ public class AuthenticationController : ControllerBase
         _mapper = new Mapper(_session);
     }
     
-    [HttpGet]
-    public IActionResult Get()
-    {
-        return Ok(new User());
-    }
-
     [HttpPut]
     public async Task<IActionResult> Put([FromBody] SignUpRequest request)
     {
@@ -50,7 +44,7 @@ public class AuthenticationController : ControllerBase
         
         user.ProvideSaltAndHash();
 
-        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email) values ({Guid.NewGuid()}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}')";
+        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email, access_token, refresh_token) values ({Guid.NewGuid()}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}', '', '')";
 
         await _session.ExecuteAsync(new SimpleStatement(sql));
 
