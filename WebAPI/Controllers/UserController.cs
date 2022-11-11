@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
@@ -25,7 +26,6 @@ public class UserController : ControllerBase
         _mapper = new Mapper(_session);
     }
 
-    [Authorize]
     [HttpGet]
     public IActionResult Me([FromHeader] string Authorization)
     {

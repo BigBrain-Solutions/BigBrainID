@@ -2,6 +2,7 @@
 using Cassandra;
 using Cassandra.Mapping;
 using Domain.Dtos;
+using Domain.Enums;
 using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,7 @@ public class AuthorizeController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> Callback(string email, string clientId, string redirectUri, string scope)
+    public async Task<IActionResult> Callback(string email, string clientId, string redirectUri, string scope, string responseType)
     {
         // Check if clientId is valid
         var cId = await _mapper.FirstOrDefaultAsync<string>($"SELECT client_id FROM BBS_ID.applications WHERE client_id = '{clientId}' ALLOW FILTERING");
@@ -36,11 +37,27 @@ public class AuthorizeController : ControllerBase
             return BadRequest(new{ Error = "client_id was not found."});
         }
         
+        var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.users WHERE email = '{email}' ALLOW FILTERING");
+        
         // TODO: check if redirectUri is on the list
 
-        var code = CredentialsHelper.GenerateCode().ToString();
+        if (responseType == EResponseType.Token.ToString())
+        {
+            // Generate Access Token and save it to database
+            var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
+            await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
+        
+            // Generate Refresh Token
+            var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
+            await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
 
-        var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.users WHERE email = '{email}' ALLOW FILTERING");
+            redirectUri += $"?access_token={accessToken}&refresh_token={refreshToken}";
+            
+            return Redirect(redirectUri);
+        }
+        
+        var code = CredentialsHelper.GenerateCode().ToString();
+        
         await _session.ExecuteAsync(new SimpleStatement($"INSERT INTO BBS_ID.codes (id, code, email, scopes) VALUES ({userId},'{code}', '{email}', '{scope}')"));
         
         redirectUri += $"?code={code}";
@@ -49,22 +66,27 @@ public class AuthorizeController : ControllerBase
     }
 
     [HttpPost("token")]
-    public IActionResult GrantToken([FromBody] GrantTokenRequest request, [FromHeader] string clientId, [FromHeader] string clientSecret)
+    public async Task<IActionResult> GrantToken([FromBody] GrantTokenRequest request, [FromHeader] string clientId, [FromHeader] string clientSecret)
     {
-        // TODO: Check if Code is valid and get the scopes
         // TODO: Check Grant Type
         
         var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.codes WHERE code = '{request.Code}' ALLOW FILTERING");
+        
+        // Check if Code is valid
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new {Error = "Wrong code"});
+        }
 
         // Generate Access Token and save it to database
         var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
         
-        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
         
         // Generate Refresh Token
         var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
 
-        _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
         
         // TODO: Check for client id or client secret
 

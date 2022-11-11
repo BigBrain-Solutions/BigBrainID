@@ -50,4 +50,19 @@ public class AuthenticationController : ControllerBase
 
         return Ok(request);
     }
+
+    [HttpPost("Login")]
+    public IActionResult Login([FromBody] LoginRequest request)
+    {
+        var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE email = '{request.Email}' ALLOW FILTERING");
+
+        if (user is null)
+            return BadRequest(new {Error = $"Email: '{request.Email}' does not exists in our database"});
+
+
+        if (user.PasswordHash != AuthenticationHelper.GenerateHash(request.Password, user.Salt))
+            return BadRequest(new {Error = "Invalid password"});
+        
+        return Ok(user);
+    }
 }
