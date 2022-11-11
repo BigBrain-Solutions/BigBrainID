@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthenticationController : ControllerBase
 {
     private readonly ICluster _cluster;
@@ -48,7 +48,7 @@ public class AuthenticationController : ControllerBase
 
         await _session.ExecuteAsync(new SimpleStatement(sql));
 
-        return Ok(request);
+        return Ok();
     }
 
     [HttpPost("Login")]

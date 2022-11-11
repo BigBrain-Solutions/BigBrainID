@@ -50,11 +50,12 @@ public static class AuthenticationHelper
         return tokenHandler.WriteToken(token);
     }
 
-    public static ClaimsIdentity AssembleClaimsIdentity(Guid userId)
+    public static ClaimsIdentity AssembleClaimsIdentity(Guid userId, string scope)
     {
         var subject = new ClaimsIdentity(new[]
         {
-            new Claim("code", userId.ToString())
+            new Claim("code", userId.ToString()),
+            new Claim("scope", scope)
         });
         return subject;
     }

@@ -25,7 +25,7 @@ var session = cluster.Connect();
 
 await session.ExecuteAsync(new SimpleStatement("CREATE KEYSPACE IF NOT EXISTS " + keyspace + " WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };"));
 await session.ExecuteAsync(new SimpleStatement("CREATE TABLE IF NOT EXISTS BBS_ID.users (id uuid PRIMARY KEY, password_hash text, salt text, access_token text, refresh_token text, email text)"));
-await session.ExecuteAsync(new SimpleStatement($"CREATE TABLE IF NOT EXISTS {keyspace}.applications (id uuid PRIMARY KEY, title text, client_id text, client_secret text, redirect_uris set<text>, owner_id uuid), owner_id uuid"));
+await session.ExecuteAsync(new SimpleStatement($"CREATE TABLE IF NOT EXISTS {keyspace}.applications (id uuid PRIMARY KEY, title text, client_id text, client_secret text, redirect_uris set<text>, owner_id uuid)"));
 await session.ExecuteAsync(new SimpleStatement($"CREATE TABLE IF NOT EXISTS {keyspace}.codes (id uuid PRIMARY KEY, code text, email text, scopes text)"));
 
 var settings = new Settings();

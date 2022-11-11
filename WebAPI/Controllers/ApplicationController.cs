@@ -30,11 +30,7 @@ public class ApplicationController : ControllerBase
         var appId = Guid.NewGuid();
         var app = $"INSERT INTO BBS_ID.applications (id, title, client_id, client_secret, owner_id) VALUES ({appId}, '{request.Title}', '{CredentialsHelper.GenerateClientId()}', '{CredentialsHelper.GenerateClientSecret()}', {request.OwnerId})";
 
-        var userSql =
-            $"UPDATE BBS_ID.users SET application_ids = application_ids + {{'{appId.ToString()}'}} WHERE id = {request.OwnerId}";
-        
         await _session.ExecuteAsync(new SimpleStatement(app));
-        await _session.ExecuteAsync(new SimpleStatement(userSql));
 
         return Created("",new{ Message = "Application was created"});
     }

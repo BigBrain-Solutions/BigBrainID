@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace WebAPI.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/oauth2")]
 public class AuthorizeController : ControllerBase
 {
     private readonly Settings _settings;
@@ -41,16 +41,16 @@ public class AuthorizeController : ControllerBase
         
         // TODO: check if redirectUri is on the list
 
+        // Generate Access Token and save it to database
+        var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId, scope));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
+        
+        // Generate Refresh Token
+        var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId, scope));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
+        
         if (responseType == EResponseType.Token.ToString())
         {
-            // Generate Access Token and save it to database
-            var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
-            await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
-        
-            // Generate Refresh Token
-            var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
-            await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
-
             redirectUri += $"?access_token={accessToken}&refresh_token={refreshToken}";
             
             return Redirect(redirectUri);
@@ -68,9 +68,14 @@ public class AuthorizeController : ControllerBase
     [HttpPost("token")]
     public async Task<IActionResult> GrantToken([FromBody] GrantTokenRequest request, [FromHeader] string clientId, [FromHeader] string clientSecret)
     {
-        // TODO: Check Grant Type
-        
         var userId = _mapper.First<Guid>($"SELECT id FROM BBS_ID.codes WHERE code = '{request.Code}' ALLOW FILTERING");
+
+        var title = await _mapper.FirstAsync<string>($"SELECT title FROM BBS_ID.applications WHERE client_id = '{clientId}' AND client_secret = '{clientSecret}' ALLOW FILTERING");
+
+        if (string.IsNullOrEmpty(title))
+        {
+            return BadRequest();
+        }
         
         // Check if Code is valid
         if (userId == Guid.Empty)
@@ -78,15 +83,10 @@ public class AuthorizeController : ControllerBase
             return BadRequest(new {Error = "Wrong code"});
         }
 
-        // Generate Access Token and save it to database
-        var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
-        
-        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {userId}"));
+        var accessToken = await _mapper.FirstAsync<string>($"SELECT access_token FROM BBS_ID.users WHERE id = {userId}");
         
         // Generate Refresh Token
-        var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(userId));
-
-        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {userId}"));
+        var refreshToken = await _mapper.FirstAsync<string>($"SELECT refresh_token FROM BBS_ID.users WHERE id = {userId}");
         
         // TODO: Check for client id or client secret
 
