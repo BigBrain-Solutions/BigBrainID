@@ -11,7 +11,7 @@ public static class AuthenticationHelper
 {
     private static RandomNumberGenerator rng = RandomNumberGenerator.Create();
     
-    private static byte[] GenerateSalt(int size)
+    private static byte[] GenerateSalt(uint size)
     {
         var salt = new byte[size];
         rng.GetBytes(salt);
@@ -58,5 +58,10 @@ public static class AuthenticationHelper
             new Claim("scope", scope)
         });
         return subject;
+    }
+
+    public static byte[] GenerateSaltMock(uint size)
+    {
+        return GenerateSalt(size);
     }
 }
