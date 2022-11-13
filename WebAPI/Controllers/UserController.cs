@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Text.RegularExpressions;
 using Application.Helpers;
 using Cassandra;
 using Cassandra.Mapping;
@@ -17,9 +18,9 @@ public class UserController : ControllerBase
     private readonly Cassandra.ISession _session;
     private readonly IMapper _mapper;
 
-    public UserController()
+    public UserController(CassandraSettings cassandraSettings)
     {
-        _cluster = CassandraConnectionHelper.Connect();
+        _cluster = CassandraConnectionHelper.Connect(cassandraSettings);
 
         _session = _cluster.Connect();
 
@@ -31,9 +32,19 @@ public class UserController : ControllerBase
     {
         var bearer = new Regex("Bearer ");
 
-        var accessToken = bearer.Split(Authorization);
+        var accessToken = bearer.Split(Authorization)[1];
 
-        var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE access_token = '{accessToken[1]}' ALLOW FILTERING");
+        var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE access_token = '{accessToken}' ALLOW FILTERING");
+        
+        var handler = new JwtSecurityTokenHandler();
+        var accessTokenDecoded = handler.ReadJwtToken(accessToken);
+        var claims = accessTokenDecoded.Claims;
+        var scopes = claims.ToList()[1].Value;
+
+        if (!scopes.Contains("user-profile"))
+        {
+            return BadRequest(new {Error = "Wrong scopes"});
+        }
         
         return Ok(user);
     }

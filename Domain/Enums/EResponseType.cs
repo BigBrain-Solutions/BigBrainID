@@ -3,5 +3,6 @@
 public enum EResponseType
 {
     Token,
+    RefreshToken,
     Code
 }

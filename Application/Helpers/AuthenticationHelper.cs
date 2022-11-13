@@ -54,7 +54,7 @@ public static class AuthenticationHelper
     {
         var subject = new ClaimsIdentity(new[]
         {
-            new Claim("code", userId.ToString()),
+            new Claim("id", userId.ToString()),
             new Claim("scope", scope)
         });
         return subject;

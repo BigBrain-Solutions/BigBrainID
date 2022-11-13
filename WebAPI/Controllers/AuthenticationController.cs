@@ -15,9 +15,9 @@ public class AuthenticationController : ControllerBase
     private readonly Cassandra.ISession _session;
     private readonly IMapper _mapper;
 
-    public AuthenticationController()
+    public AuthenticationController(CassandraSettings cassandraSettings)
     {
-        _cluster = CassandraConnectionHelper.Connect();
+        _cluster = CassandraConnectionHelper.Connect(cassandraSettings);
 
         _session = _cluster.Connect();
 

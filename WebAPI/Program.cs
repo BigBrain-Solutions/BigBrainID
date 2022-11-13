@@ -17,9 +17,13 @@ builder.Services.AddSwaggerGen();
 
 const string keyspace = "BBS_ID";
 
+var cassandraSettings = new CassandraSettings();
+builder.Configuration.Bind("CassandraSettings", cassandraSettings);
+builder.Services.AddSingleton(cassandraSettings);
+
 var options = new SSLOptions(SslProtocols.Tls12, true, (sender, certificate, chain, errors) => true);
-options.SetHostNameResolver((ipAddress) => "luuqe.cassandra.cosmos.azure.com");
-var cluster = CassandraConnectionHelper.Connect();
+options.SetHostNameResolver((ipAddress) => cassandraSettings.IpAddress);
+var cluster = CassandraConnectionHelper.Connect(cassandraSettings);
 
 var session = cluster.Connect();
 

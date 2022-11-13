@@ -1,4 +1,5 @@
-﻿using Application.Helpers;
+﻿using System.Text.RegularExpressions;
+using Application.Helpers;
 using Cassandra;
 using Cassandra.Mapping;
 using Domain.Dtos;
@@ -17,10 +18,10 @@ public class AuthorizeController : ControllerBase
     private readonly Cassandra.ISession _session;
     private readonly IMapper _mapper;
 
-    public AuthorizeController(Settings settings)
+    public AuthorizeController(Settings settings, CassandraSettings cassandraSettings)
     {
         _settings = settings;
-        _cluster = CassandraConnectionHelper.Connect();
+        _cluster = CassandraConnectionHelper.Connect(cassandraSettings);
 
         _session = _cluster.Connect();
 
@@ -89,6 +90,30 @@ public class AuthorizeController : ControllerBase
         var refreshToken = await _mapper.FirstAsync<string>($"SELECT refresh_token FROM BBS_ID.users WHERE id = {userId}");
         
         // TODO: Check for client id or client secret
+
+        return Ok(new
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken
+        });
+    }
+    
+    [HttpPatch("token")]
+    public async Task<IActionResult> RefreshToken([FromHeader] string Authorization, [FromQuery] string scope)
+    {
+        var bearer = new Regex("Bearer ");
+
+        var accessToken = bearer.Split(Authorization)[1];
+
+        var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE access_token = '{accessToken}' ALLOW FILTERING");
+        
+        // Generate Access Token and save it to database
+        accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(user.Id, scope));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {user.Id}"));
+        
+        // Generate Refresh Token
+        var refreshToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(user.Id, scope));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET refresh_token='{refreshToken}' WHERE id = {user.Id}"));
 
         return Ok(new
         {

@@ -15,9 +15,9 @@ public class ApplicationController : ControllerBase
     private readonly Cassandra.ISession _session;
     private readonly IMapper _mapper;
 
-    public ApplicationController()
+    public ApplicationController(CassandraSettings cassandraSettings)
     {
-        _cluster = CassandraConnectionHelper.Connect();
+        _cluster = CassandraConnectionHelper.Connect(cassandraSettings);
         
         _session = _cluster.Connect();
 
