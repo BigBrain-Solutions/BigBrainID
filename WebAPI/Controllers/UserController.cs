@@ -38,6 +38,12 @@ public class UserController : ControllerBase
         
         var handler = new JwtSecurityTokenHandler();
         var accessTokenDecoded = handler.ReadJwtToken(accessToken);
+
+        if (accessTokenDecoded.ValidTo.ToUniversalTime() < DateTime.Now.ToUniversalTime())
+        {
+            return Unauthorized();
+        }
+        
         var claims = accessTokenDecoded.Claims;
         var scopes = claims.ToList()[1].Value;
 

@@ -11,12 +11,14 @@ namespace WebAPI.Controllers;
 [Route("api/auth")]
 public class AuthenticationController : ControllerBase
 {
+    private readonly Settings _settings;
     private readonly ICluster _cluster;
     private readonly Cassandra.ISession _session;
     private readonly IMapper _mapper;
 
-    public AuthenticationController(CassandraSettings cassandraSettings)
+    public AuthenticationController(CassandraSettings cassandraSettings, Settings settings)
     {
+        _settings = settings;
         _cluster = CassandraConnectionHelper.Connect(cassandraSettings);
 
         _session = _cluster.Connect();
@@ -44,17 +46,23 @@ public class AuthenticationController : ControllerBase
         
         user.ProvideSaltAndHash();
 
-        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email, access_token, refresh_token) values ({Guid.NewGuid()}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}', '', '')";
+        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email, access_token, refresh_token, username) values ({Guid.NewGuid()}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}', '', '', '{request.Username}')";
 
         await _session.ExecuteAsync(new SimpleStatement(sql));
 
         return Ok();
     }
 
-    [HttpPost("Login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    [HttpPost]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE email = '{request.Email}' ALLOW FILTERING");
+
+        const string scope = "read:notes write:notes";
+        
+        // Generate Access Token and save it to database
+        var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(user.Id, scope));
+        await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {user.Id}")).ConfigureAwait(false);
 
         if (user is null)
             return BadRequest(new {Error = $"Email: '{request.Email}' does not exists in our database"});
@@ -63,6 +71,9 @@ public class AuthenticationController : ControllerBase
         if (user.PasswordHash != AuthenticationHelper.GenerateHash(request.Password, user.Salt))
             return BadRequest(new {Error = "Invalid password"});
         
-        return Ok(user);
+        return Ok(new
+        {
+            AccessToken = accessToken
+        });
     }
 }
