@@ -2,11 +2,14 @@ version: '3.4'
 
 services:
   cassandra:
-    image: cassandra:latest
     container_name: BigBrainID_DB
+    image: cassandra:latest
     ports:
       - "9042:9042"
-    restart: always
+    volumes:
+      - ~/apps/cassandra:/var/lib/cassandra
+    environment:
+      - CASSANDRA_CLUSTER_NAME=bbsid_db
   
   api:
     container_name: BigBrainID_API
