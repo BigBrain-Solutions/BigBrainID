@@ -50,18 +50,18 @@ public class AuthenticationController : ControllerBase
 
         await _session.ExecuteAsync(new SimpleStatement(sql));
 
-        return Ok();
+        return Created(string.Empty, new {Message = "Account was created"});
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, [FromHeader] string cId)
     {
         var user = _mapper.First<User>($"SELECT * FROM BBS_ID.users WHERE email = '{request.Email}' ALLOW FILTERING");
 
-        const string scope = "read:notes write:notes";
+        const string scope = "read:user-profile write:user-profile";
         
         // Generate Access Token and save it to database
-        var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(user.Id, scope));
+        var accessToken = AuthenticationHelper.GenerateAccessToken(_settings, AuthenticationHelper.AssembleClaimsIdentity(user.Id, scope, cId), 99350);
         await _session.ExecuteAsync(new SimpleStatement($"UPDATE BBS_ID.users SET access_token='{accessToken}' WHERE id = {user.Id}")).ConfigureAwait(false);
 
         if (user is null)

@@ -2,8 +2,6 @@
 	<s:String x:Key="/Default/Environment/Highlighting/HighlightingSourceSnapshotLocation/@EntryValue">C:\Users\lukas\AppData\Local\JetBrains\Rider2022.2\resharper-host\temp\Rider\vAny\CoverageData\_BigBrainID.-1458598342\Snapshot\snapshot.utdcvr</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=cef08b8a_002D9959_002D4158_002Db85d_002D88dd1e50e19a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GenerateSalt_Test" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::848D5EB5-D988-4BF3-9861-6E84B5C65FE0::net6.0::ApplicationTests.CredentialsHelperTests.AssembleClaimsIdentity_Test&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::848D5EB5-D988-4BF3-9861-6E84B5C65FE0::net6.0::ApplicationTests.CredentialsHelperTests.GenerateAccessToken_Test_Claims&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::848D5EB5-D988-4BF3-9861-6E84B5C65FE0::net6.0::ApplicationTests.CredentialsHelperTests.GenerateAccessToken_Test_Valid&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;NUnit3x::848D5EB5-D988-4BF3-9861-6E84B5C65FE0::net6.0::ApplicationTests.CredentialsHelperTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

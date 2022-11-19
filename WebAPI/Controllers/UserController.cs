@@ -47,11 +47,16 @@ public class UserController : ControllerBase
         var claims = accessTokenDecoded.Claims;
         var scopes = claims.ToList()[1].Value;
 
-        if (!scopes.Contains("user-profile"))
+        if (!scopes.Contains("read:user-profile"))
         {
             return BadRequest(new {Error = "Wrong scopes"});
         }
         
-        return Ok(user);
+        return Ok(new
+        {
+            user.Username,
+            user.Email,
+            user.Image
+        });
     }
 }

@@ -50,12 +50,38 @@ public static class AuthenticationHelper
         return tokenHandler.WriteToken(token);
     }
 
+    public static string GenerateAccessToken(Settings settings, ClaimsIdentity subject, int minutesFromNow)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(settings.BearerKey);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = subject,
+            Expires = DateTime.Now.AddMinutes(minutesFromNow),
+            SigningCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+    
     public static ClaimsIdentity AssembleClaimsIdentity(Guid userId, string scope)
     {
         var subject = new ClaimsIdentity(new[]
         {
             new Claim("id", userId.ToString()),
             new Claim("scope", scope)
+        });
+        return subject;
+    }
+    
+    public static ClaimsIdentity AssembleClaimsIdentity(Guid userId, string scope, string cId)
+    {
+        var subject = new ClaimsIdentity(new[]
+        {
+            new Claim("id", userId.ToString()),
+            new Claim("scope", scope),
+            new Claim("cId", cId)
         });
         return subject;
     }

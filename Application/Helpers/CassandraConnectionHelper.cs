@@ -9,7 +9,6 @@ public static class CassandraConnectionHelper
     public static Cluster Connect(CassandraSettings cassandraSettings)
     {
         var options = new SSLOptions(SslProtocols.Tls12, true, (sender, certificate, chain, errors) => true);
-        /*
         options.SetHostNameResolver((ipAddress) => cassandraSettings.IpAddress);
         var cluster = Cluster.Builder()
             .WithCredentials(cassandraSettings.Username, cassandraSettings.Password)
@@ -17,10 +16,9 @@ public static class CassandraConnectionHelper
             .AddContactPoint(cassandraSettings.IpAddress)
             .WithSSL(options)
             .Build();
-            */
 
-        var cluster = Cluster.Builder().AddContactPoint("127.0.0.1");
+        //var cluster = Cluster.Builder().AddContactPoint("0.0.0.0").Build();
 
-        return cluster.Build();
+        return cluster;
     }
 }
