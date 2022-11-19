@@ -9,6 +9,51 @@ Big Brain Authorization Service - oAuth 2.0
 
 - Backed Identity Service for <a href="https://github.com/BigBrain-Solutions/bbs_website"> BigBrain Solution website </a> made in ASP.NET CORE
 
+## Run
+
+#### Run by docker compose:
+```
+/BigBrainID> docker compose-up
+```
+
+#### On Azure
+
+``
+/BigBrainID/Application/Helpers
+``
+
+In ``CassandraConnectionHelper.cs``
+
+Should look like this: 
+
+```csharp
+public static Cluster Connect(CassandraSettings cassandraSettings)
+{
+    var options = new SSLOptions(SslProtocols.Tls12, true, (sender, certificate, chain, errors) => true);
+    options.SetHostNameResolver((ipAddress) => cassandraSettings.IpAddress);
+    var cluster = Cluster.Builder()
+        .WithCredentials(cassandraSettings.Username, cassandraSettings.Password)
+        .WithPort(cassandraSettings.Port)
+        .AddContactPoint(cassandraSettings.IpAddress)
+        .WithSSL(options)
+        .Build();
+    
+    return cluster;
+}
+```
+
+Open ``appsettings.json``
+
+Edit
+```json
+"CassandraSettings": {
+"IpAddress": "<db>.cassandra.cosmos.azure.com",
+"Username": "<username>",
+"Password": "<your_password>",
+"Port": 10350
+}
+```
+
 ## Tools
 
 - ASP.NET CORE
