@@ -7,7 +7,13 @@ Big Brain Authorization Service - oAuth 2.0
 
 ## About
 
-- Backed Identity Service for <a href="https://github.com/BigBrain-Solutions/bbs_website"> BigBrain Solution website </a> made in ASP.NET CORE
+- Identity Service for <a href="https://github.com/BigBrain-Solutions/bbs_website"> BigBrain Solution website </a> made in ASP.NET CORE
+
+## Architecture
+
+<p> Work in progress... </p>
+
+<img src="https://raw.githubusercontent.com/BigBrain-Solutions/graphs/main/bigbrain_solutions_web.png" width="70%" />
 
 ## Run
 
