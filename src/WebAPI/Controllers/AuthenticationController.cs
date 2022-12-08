@@ -46,11 +46,13 @@ public class AuthenticationController : ControllerBase
         
         user.ProvideSaltAndHash();
 
-        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email, access_token, refresh_token, username) values ({Guid.NewGuid()}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}', '', '', '{request.Username}')";
+        var id = Guid.NewGuid();
+
+        var sql = $@"INSERT INTO BBS_ID.users (id, password_hash, salt, email, access_token, refresh_token, username) values ({id}, '{user.PasswordHash}', '{user.Salt}', '{request.Email}', '', '', '{request.Username}')";
 
         await _session.ExecuteAsync(new SimpleStatement(sql));
 
-        return Created(string.Empty, new {Message = "Account was created"});
+        return Created(string.Empty, new {Message = id});
     }
 
     [HttpPost]
